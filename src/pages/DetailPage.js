@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { MdOutlineArchive, MdOutlineUnarchive } from 'react-icons/md';
 import autoBind from 'auto-bind';
+import { ClipLoader } from 'react-spinners';
 
 import NoteDetail from '../components/NoteDetail';
 import DeleteButton from '../components/DeleteButton';
@@ -11,7 +12,7 @@ import ToggleArchiveButton from '../components/ToggleArchiveButton';
 
 import {
   archiveNote, deleteNote, getNote, unarchiveNote,
-} from '../utils/local-data';
+} from '../utils/network-data';
 
 function DetailPageWrapper() {
   const navigate = useNavigate();
@@ -47,17 +48,36 @@ class DetailPage extends React.Component {
     super(props);
 
     this.state = {
-      note: getNote(props.id),
+      note: null,
+      initializing: true,
     };
 
     autoBind(this);
   }
 
+  async componentDidMount() {
+    const { id } = this.props;
+    const { data } = await getNote(id);
+
+    this.setState(() => ({
+      note: data,
+      initializing: false,
+    }));
+  }
+
   render() {
-    const { note } = this.state;
+    const { note, initializing } = this.state;
     const { onDelete, onArchive, onUnarchive } = this.props;
 
-    if (note === undefined) {
+    if (initializing) {
+      return (
+        <section className="loader">
+          <ClipLoader />
+        </section>
+      );
+    }
+
+    if (note === null) {
       return <NotFoundPage />;
     }
 
@@ -65,7 +85,7 @@ class DetailPage extends React.Component {
       <section className="detail-page">
         <NoteDetail {...note} />
         <div className="detail-page__action">
-          {note.archived ? (
+          {note?.archived ? (
             <ToggleArchiveButton title="Aktifkan" onArchiveBtn={onUnarchive} icon={<MdOutlineUnarchive />} />
           ) : (
             <ToggleArchiveButton title="Arsipkan" onArchiveBtn={onArchive} icon={<MdOutlineArchive />} />

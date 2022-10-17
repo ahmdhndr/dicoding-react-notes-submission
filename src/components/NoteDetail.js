@@ -21,9 +21,9 @@ NoteDetail.propTypes = {
 };
 
 NoteDetail.defaultProps = {
-  title: null,
-  createdAt: null,
-  body: null,
+  title: '',
+  createdAt: '',
+  body: '',
 };
 
 export default NoteDetail;

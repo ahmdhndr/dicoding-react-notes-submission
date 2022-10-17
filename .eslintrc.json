@@ -29,6 +29,7 @@
         ],
         "react/jsx-props-no-spreading": "off",
         "react/jsx-no-bind": "off",
-        "react/jsx-one-expression-per-line": "off"
+        "react/jsx-one-expression-per-line": "off",
+        "no-nested-ternary": "off"
     }
 }

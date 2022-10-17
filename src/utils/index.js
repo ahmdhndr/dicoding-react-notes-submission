@@ -11,6 +11,13 @@ const showFormattedDate = (date) => {
   return new Date(date).toLocaleDateString('id-ID', options);
 };
 
+const changeLanguage = (locale, id, en) => {
+  if (locale === 'id') {
+    return id;
+  }
+  return en;
+};
+
 const HOME_PATH = '/';
 const ARCHIVES_PATH = '/archives';
 const DETAIL_NOTE_PATH = '/notes/:id';
@@ -28,4 +35,5 @@ export {
   NOT_FOUND_PATH,
   LOGIN_PATH,
   REGISTER_PATH,
+  changeLanguage,
 };

@@ -1,85 +1,72 @@
 import React from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { FiBook } from 'react-icons/fi';
-import PropTypes from 'prop-types';
-import autoBind from 'auto-bind';
+import { ClipLoader } from 'react-spinners';
 
 import NoteList from '../components/NoteList';
 import SearchBar from '../components/SearchBar';
 import AddButton from '../components/AddButton';
 
-import { getActiveNotes } from '../utils/local-data';
+import { getActiveNotes } from '../utils/network-data';
+import ThemeContext from '../contexts/ThemeContext';
+import LocaleContext from '../contexts/LocaleContext';
+import { changeLanguage } from '../utils';
 
-function HomePageWrapper() {
+function HomePage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [loading, setLoading] = React.useState(false);
+  const [notes, setNotes] = React.useState([]);
+  const [defaultKeyword, setDefaultKeyword] = React.useState(() => searchParams.get('keyword') || '');
+  const { theme } = React.useContext(ThemeContext);
+  const { locale } = React.useContext(LocaleContext);
 
-  const keyword = searchParams.get('keyword');
+  React.useEffect(() => {
+    setLoading(true);
 
-  // eslint-disable-next-line no-shadow
-  function changeSearchParams(keyword) {
-    setSearchParams({ keyword });
-  }
-
-  return <HomePage defaultKeyword={keyword} keywordChange={changeSearchParams} />;
-}
-
-class HomePage extends React.Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      notes: getActiveNotes(),
-      keyword: props.defaultKeyword || '',
+    const fetchNotesData = async () => {
+      const { data } = await getActiveNotes();
+      setNotes(data);
+      setLoading(false);
     };
 
-    autoBind(this);
-  }
+    fetchNotesData();
 
-  onKeywordChangeHandler(keyword) {
-    const { keywordChange } = this.props;
-    this.setState(() => ({
-      keyword,
-    }));
+    return () => {
+      setNotes();
+      setLoading();
+    };
+  }, []);
 
-    keywordChange(keyword);
-  }
+  const onKeywordChangeHandler = (keyword) => {
+    setDefaultKeyword(keyword);
+    setSearchParams({ keyword });
+  };
 
-  render() {
-    const { notes, keyword } = this.state;
-    // eslint-disable-next-line arrow-body-style
-    const filteredNotes = notes.filter((note) => {
-      return note.title.toLowerCase().includes(
-        keyword.toLowerCase(),
-      );
-    });
+  const filteredNotes = notes?.filter((note) => note.title.toLowerCase().includes(
+    defaultKeyword.toLowerCase(),
+  ));
 
-    return (
-      <section className="homepage">
-        <h2>Catatan Aktif</h2>
-        <SearchBar keyword={keyword} keywordChange={this.onKeywordChangeHandler} />
-        {!filteredNotes.length ? (
+  return (
+    <section className="homepage">
+      <h2>{changeLanguage(locale, 'Catatan Aktif', 'Note Actives')}</h2>
+      <SearchBar keyword={defaultKeyword} keywordChange={onKeywordChangeHandler} />
+      {loading ? (
+        <p className="loader"><ClipLoader color={theme === 'light' ? '#121212' : '#FFFFFF'} className="loader-icon" /></p>
+      ) : (
+        !filteredNotes.length ? (
           <div className="notes-list-empty">
             <FiBook />
-            <p>Tidak ada catatan.</p>
+            <p>{changeLanguage(locale, 'Tidak ada catatan.', 'Empty notes.')}</p>
           </div>
         ) : (
           <NoteList notes={filteredNotes} />
-        )}
-        <div className="homepage__action">
-          <AddButton />
-        </div>
-      </section>
-    );
-  }
+        )
+      )}
+      <div className="homepage__action">
+        <AddButton />
+      </div>
+    </section>
+  );
 }
 
-HomePage.propTypes = {
-  defaultKeyword: PropTypes.string,
-  keywordChange: PropTypes.func.isRequired,
-};
-
-HomePage.defaultProps = {
-  defaultKeyword: '',
-};
-
-export default HomePageWrapper;
+export default HomePage;

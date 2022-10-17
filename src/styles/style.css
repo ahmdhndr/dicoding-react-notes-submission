@@ -55,7 +55,6 @@ header {
 
 header h1 {
   flex: 1;
-  margin-left: 20px;
 }
 
 header svg {
@@ -75,11 +74,6 @@ header .navigation ul li {
   padding: 32px 0;
 }
 
-/* #main.hide>section:nth-child(2) {
-  margin-left: 80px;
-  width: calc(90% - 60px);
-} */
-
 #main.hide .sidenav-menu {
   width: 60px;
 }
@@ -94,6 +88,13 @@ header .navigation ul li {
   width: calc(90% - 60px);
   max-width: 1200px;
   transition: all .5s ease;
+}
+
+.login-page,
+.register-page {
+  margin: 70px auto 0;
+  width: 90%;
+  max-width: 1200px;
 }
 
 .menu {
@@ -162,6 +163,15 @@ header .navigation ul li {
 }
 
 .notes-list-empty p {
+  text-align: center;
+  color: var(--on-background-grey);
+}
+
+.loader {
+  margin: 0 auto;
+  width: 100%;
+  margin-top: 32px;
+  padding: 32px 0;
   text-align: center;
   color: var(--on-background-grey);
 }
@@ -393,8 +403,9 @@ header .navigation ul li {
   padding: 10px 12px;
   text-align: center;
   background: var(--on-background);
-  color: var(--surface);
+  color: var(--background);
   margin-top: 10px;
+  transition: all ease-in-out 0.5s;
 }
 
 @media screen and (min-width: 650px) {

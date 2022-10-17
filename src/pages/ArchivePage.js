@@ -1,81 +1,68 @@
 import React from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { BsArchive } from 'react-icons/bs';
-import PropTypes from 'prop-types';
-import autoBind from 'auto-bind';
+import { ClipLoader } from 'react-spinners';
 
 import NoteList from '../components/NoteList';
 import SearchBar from '../components/SearchBar';
 
-import { getArchivedNotes } from '../utils/local-data';
+import { getArchivedNotes } from '../utils/network-data';
+import ThemeContext from '../contexts/ThemeContext';
+import LocaleContext from '../contexts/LocaleContext';
+import { changeLanguage } from '../utils';
 
-function ArchivePageWrapper() {
+function ArchivePage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [notes, setNotes] = React.useState([]);
+  const [defaultKeyword, setDefaultKeyword] = React.useState(() => searchParams.get('keyword') || '');
+  const [loading, setLoading] = React.useState(false);
+  const { theme } = React.useContext(ThemeContext);
+  const { locale } = React.useContext(LocaleContext);
 
-  const keyword = searchParams.get('keyword');
+  React.useEffect(() => {
+    setLoading(true);
 
-  // eslint-disable-next-line no-shadow
-  function changeSearchParams(keyword) {
-    setSearchParams({ keyword });
-  }
-
-  return <ArchivePage defaultKeyword={keyword} keywordChange={changeSearchParams} />;
-}
-
-class ArchivePage extends React.Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      notes: getArchivedNotes(),
-      keyword: props.defaultKeyword || '',
+    const fetchArchiveNotes = async () => {
+      const { data } = await getArchivedNotes();
+      setNotes(data);
+      setLoading(false);
     };
 
-    autoBind(this);
-  }
+    fetchArchiveNotes();
 
-  onKeywordChangeHandler(keyword) {
-    const { keywordChange } = this.props;
-    this.setState(() => ({
-      keyword,
-    }));
+    return () => {
+      setNotes();
+      setLoading();
+    };
+  }, []);
 
-    keywordChange(keyword);
-  }
+  const onKeywordChangeHandler = (keyword) => {
+    setDefaultKeyword(keyword);
+    setSearchParams({ keyword });
+  };
 
-  render() {
-    const { notes, keyword } = this.state;
-    // eslint-disable-next-line arrow-body-style
-    const filteredNotes = notes.filter((note) => {
-      return note.title.toLowerCase().includes(
-        keyword.toLowerCase(),
-      );
-    });
+  const filteredNotes = notes?.filter((note) => note.title.toLowerCase().includes(
+    defaultKeyword.toLowerCase(),
+  ));
 
-    return (
-      <section className="archives-page">
-        <h2>Arsip Catatan</h2>
-        <SearchBar keyword={keyword} keywordChange={this.onKeywordChangeHandler} />
-        {!filteredNotes.length ? (
+  return (
+    <section className="archives-page">
+      <h2>{changeLanguage(locale, 'Arsip Catatan', 'Note Archives')}</h2>
+      <SearchBar keyword={defaultKeyword} keywordChange={onKeywordChangeHandler} />
+      {loading ? (
+        <p className="loader"><ClipLoader color={theme === 'light' ? '#121212' : '#FFFFFF'} className="loader-icon" /></p>
+      ) : (
+        !filteredNotes.length ? (
           <div className="notes-list-empty">
             <BsArchive />
-            <p>Tidak ada catatan.</p>
+            <p>{changeLanguage(locale, 'Tidak ada catatan.', 'Empty notes.')}</p>
           </div>
         ) : (
           <NoteList notes={filteredNotes} />
-        )}
-      </section>
-    );
-  }
+        )
+      )}
+    </section>
+  );
 }
 
-ArchivePage.propTypes = {
-  defaultKeyword: PropTypes.string,
-  keywordChange: PropTypes.func.isRequired,
-};
-
-ArchivePage.defaultProps = {
-  defaultKeyword: '',
-};
-
-export default ArchivePageWrapper;
+export default ArchivePage;
